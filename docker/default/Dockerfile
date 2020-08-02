@@ -1,19 +1,5 @@
-# BUILD FRONTEND
-FROM node:14.2.0-alpine as ui_builder
-
-WORKDIR /usr/src/app
-
-COPY ./frontend/package.json ./package.json
-COPY ./frontend/yarn.lock ./yarn.lock
-
-RUN yarn install
-
-COPY ./frontend/ ./
-
-RUN yarn build
-
 # BUILD BACKEND
-FROM golang:1.14.6-alpine as go_builder
+FROM golang:1.14.6-alpine as builder
 
 RUN apk add --no-cache ca-certificates tzdata git
 
@@ -33,14 +19,13 @@ RUN adduser \
 
 WORKDIR /src
 
-COPY ./backend/go.mod ./backend/go.sum ./
+COPY go.mod ./go.sum ./
 RUN go mod download && go mod verify
 
-COPY ./backend ./
+COPY . .
 
 ARG APP_NAME
 ARG SERVICE_NAME
-ARG CMD_NAME
 ARG VERSION
 ARG GIT_HASH
 
@@ -55,18 +40,14 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 
 # BUILD FINAL CONTAINER
 FROM scratch as final
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-COPY --from=go_builder /usr/share/zoneinfo /usr/share/zoneinfo
-COPY --from=go_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=go_builder /etc/passwd /etc/passwd
-COPY --from=go_builder /etc/group /etc/group
-COPY --from=go_builder /app /app
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
 
-COPY --from=ui_builder /usr/src/app/dist/ /static/
+COPY --from=builder /app /app
 
 USER appuser:appuser
 
-# Set frontend static dir
-ENV FRONTEND_PATH=./static
-
-CMD ["/app"]
+ENTRYPOINT ["/app"]

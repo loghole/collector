@@ -1,15 +1,30 @@
-run-alpha: db-image collector-image dashboard-image
-	docker-compose -f docker-compose-alpha.yaml up clickhouse-db collector dashboard
+APP_NAME     ?= github.com/lissteron/loghole/collector
+SERVICE_NAME ?= $(shell basename $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 
-db-image:
-	cd clickhouse-db && $(MAKE) docker-image
+DOCKERFILE   = docker/default/Dockerfile
+DOCKER_IMAGE = loghole/$(SERVICE_NAME)
 
-collector-image:
-	cd collector && $(MAKE) docker-image
+VERSION  ?= $$(git describe --tags --always)
+GIT_HASH := $$(git rev-parse HEAD)
 
-dashboard-image:
-	cd dashboard && $(MAKE) docker-image
+GO_TEST_PACKAGES = $(shell go list ./... | egrep -v '(pkg|cmd)')
+
+go-mod:
+	go mod download
+
+go-test:
+	go test -race -v -cover -coverprofile coverage.out $(GO_TEST_PACKAGES)
 
 go-lint:
-	cd dashboard/backend && $(MAKE) go-lint
-	cd collector && $(MAKE) go-lint
+	golangci-lint run -v
+
+docker-image:
+	docker build \
+	--build-arg APP_NAME=$(APP_NAME) \
+	--build-arg SERVICE_NAME=$(SERVICE_NAME) \
+	--build-arg GIT_HASH=$(GIT_HASH) \
+	--build-arg VERSION=$(VERSION) \
+	-f $(DOCKERFILE) \
+	-t $(DOCKER_IMAGE) \
+	-t $(DOCKER_IMAGE):$(VERSION) \
+	.
