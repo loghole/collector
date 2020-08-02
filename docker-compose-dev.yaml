@@ -1,7 +1,7 @@
 version: '3'
 services:
   clickhouse-db:
-    image: loghole/clickhouse-db:latest
+    image: loghole/clickhouse-db:v0.4.0
     volumes:
       - './data/clickhouse:/var/lib/clickhouse'
     ports:
@@ -18,7 +18,7 @@ services:
   collector:
     image: golang:1.14-alpine
     volumes:
-      - ./collector/:/app
+      - ./:/app
     working_dir: /app/cmd/collector/
     command: go run main.go
     environment:
@@ -31,7 +31,7 @@ services:
 
       - LOGGER_LEVEL=debug
 
-      - CLICKHOUSE_URI=clickhouse:9000
+      - CLICKHOUSE_URI=clickhouse-db:9000
       - CLICKHOUSE_USER=
       - CLICKHOUSE_DATABASE=logs
 

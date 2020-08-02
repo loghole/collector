@@ -1,4 +1,4 @@
-APP_NAME     ?= github.com/lissteron/loghole/collector
+APP_NAME     ?= github.com/loghole/collector
 SERVICE_NAME ?= $(shell basename $(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 
 DOCKERFILE   = docker/default/Dockerfile
@@ -9,13 +9,13 @@ GIT_HASH := $$(git rev-parse HEAD)
 
 GO_TEST_PACKAGES = $(shell go list ./... | egrep -v '(pkg|cmd)')
 
-go-mod:
+gomod:
 	go mod download
 
-go-test:
+gotest:
 	go test -race -v -cover -coverprofile coverage.out $(GO_TEST_PACKAGES)
 
-go-lint:
+golint:
 	golangci-lint run -v
 
 docker-image:

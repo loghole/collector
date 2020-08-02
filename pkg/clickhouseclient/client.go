@@ -27,8 +27,10 @@ type Client struct {
 }
 
 func NewClient(config *Config) (client *Client, err error) {
+	var db *sqlx.DB
+
 	for i := 0; i < connectTryCount; i++ {
-		db, err := sqlx.Connect("clickhouse", connString(config))
+		db, err = sqlx.Connect("clickhouse", connString(config))
 		if err != nil {
 			time.Sleep(time.Second)
 			continue
