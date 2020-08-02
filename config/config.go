@@ -7,6 +7,7 @@ import (
 
 	"github.com/gadavy/tracing"
 	"github.com/spf13/viper"
+	"github.com/uber/jaeger-client-go/config"
 
 	"github.com/loghole/collector/pkg/clickhouseclient"
 	"github.com/loghole/collector/pkg/log"
@@ -55,7 +56,7 @@ func ClickhouseConfig() *clickhouseclient.Config {
 	}
 }
 
-func TracerConfig() *tracing.Config {
+func TracerConfig() *config.Configuration {
 	var service string
 
 	switch {
@@ -67,11 +68,7 @@ func TracerConfig() *tracing.Config {
 		service = defaultServiceName
 	}
 
-	return &tracing.Config{
-		URI:         viper.GetString("jaeger.uri"),
-		Enabled:     viper.GetString("jaeger.uri") != "",
-		ServiceName: service,
-	}
+	return tracing.DefaultConfiguration(service, viper.GetString("jaeger.uri"))
 }
 
 func ServerConfig() *server.Config {
