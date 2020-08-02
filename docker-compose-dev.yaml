@@ -1,0 +1,43 @@
+version: '3'
+services:
+  clickhouse-db:
+    image: loghole/clickhouse-db:latest
+    volumes:
+      - './data/clickhouse:/var/lib/clickhouse'
+    ports:
+      - 127.0.0.1:8123:8123
+      - 127.0.0.1:9500:9000
+      - 127.0.0.1:9009:9009
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+  collector:
+    image: golang:1.14-alpine
+    volumes:
+      - ./collector/:/app
+    working_dir: /app/cmd/collector/
+    command: go run main.go
+    environment:
+      - SERVER_HTTP_PORT=8080
+      - SERVER_CERT=
+      - SERVER_KEY=
+
+      - ENABLE_AUTH=true
+      - TOKEN_LIST=secret_token_1 secret_token_2
+
+      - LOGGER_LEVEL=debug
+
+      - CLICKHOUSE_URI=clickhouse:9000
+      - CLICKHOUSE_USER=
+      - CLICKHOUSE_DATABASE=logs
+
+      - JAEGER_URI=jaeger:6831
+    ports:
+      - 50000:8080
+    depends_on:
+      - clickhouse-db
+      - jaeger
