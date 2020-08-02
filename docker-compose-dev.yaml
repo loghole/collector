@@ -1,0 +1,93 @@
+version: '3'
+services:
+  clickhouse:
+    image: yandex/clickhouse-server:20.5.3.27
+    volumes:
+      - './data/clickhouse:/var/lib/clickhouse'
+      - './clickhouse-db/init.sql:/docker-entrypoint-initdb.d/init-db.sql'
+    ports:
+      - 127.0.0.1:8123:8123
+      - 127.0.0.1:9500:9000
+      - 127.0.0.1:9009:9009
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+  collector:
+    image: golang:1.14-alpine
+    volumes:
+      - ./collector/:/app
+    working_dir: /app/cmd/collector/
+    command: go run main.go
+    environment:
+      - SERVER_HTTP_PORT=8080
+      - SERVER_CERT=
+      - SERVER_KEY=
+
+      - ENABLE_AUTH=true
+      - TOKEN_LIST=secret_token_1 secret_token_2
+
+      - LOGGER_LEVEL=debug
+
+      - CLICKHOUSE_URI=clickhouse:9000
+      - CLICKHOUSE_USER=
+      - CLICKHOUSE_DATABASE=logs
+
+      - JAEGER_URI=jaeger:6831
+    ports:
+      - 50000:8080
+    depends_on:
+      - clickhouse
+      - jaeger
+
+  dashboard_backend:
+    image: golang:1.14-alpine
+    volumes:
+      - ./dashboard/backend/:/app
+    working_dir: /app/cmd/dashboard/
+    command: go run -tags !bindata main.go
+    environment:
+      - SERVER_HTTP_PORT=8080
+      - LOGGER_LEVEL=debug
+
+      - CLICKHOUSE_URI=clickhouse:9000
+      - CLICKHOUSE_USER=
+      - CLICKHOUSE_DATABASE=logs
+
+      - JAEGER_URI=jaeger:6831
+    ports:
+      - 18081:8080
+    depends_on:
+      - clickhouse
+      - jaeger
+
+  dashboard_web:
+    image: node:12.16-alpine
+    volumes:
+      - ./dashboard/frontend/:/app
+    working_dir: /app/
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "apk update && apk add --no-cache ca-certificates && cd /app && yarn install && yarn serve",
+      ]
+    ports:
+      - "0.0.0.0:8080:8080"
+
+  populate_db:
+    image: golang:1.14-alpine
+    volumes:
+      - ./dashboard/scripts/:/app
+    working_dir: /app/populate_db/
+    command: go run main.go
+    environment:
+      - COLLECTOR_URI=http://collector:8080
+      - COLLECTOR_AUTH=secret_token_1
+      - COUNT=1000
+      - SLEEP=5s
+    depends_on:
+      - dashboard_backend

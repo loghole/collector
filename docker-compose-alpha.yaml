@@ -1,0 +1,55 @@
+version: '3'
+services:
+  clickhouse-db:
+    image: loghole/clickhouse-db:latest
+    volumes:
+      - './data/clickhouse:/var/lib/clickhouse'
+    ports:
+      - 127.0.0.1:8123:8123
+      - 127.0.0.1:9500:9000
+      - 127.0.0.1:9009:9009
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.8
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+  collector:
+    image: loghole/collector:latest
+#    volumes:
+#      - './data/certs:/certs'
+    environment:
+      - SERVER_HTTP_PORT=8080
+#      - SERVER_TLS_CERT=./certs/cert.pem
+#      - SERVER_TLS_KEY=./certs/key.pem
+
+      - SERVICE_AUTH_ENABLE=true
+      - SERVICE_AUTH_TOKENS=secret_token_1 secret_token_2
+
+      - LOGGER_LEVEL=debug
+
+      - CLICKHOUSE_URI=clickhouse-db:9000
+      - CLICKHOUSE_USER=
+      - CLICKHOUSE_DATABASE=logs
+    ports:
+      - 50000:8080
+    depends_on:
+      - clickhouse-db
+
+  dashboard:
+    image: loghole/dashboard:latest
+    environment:
+      - SERVER_HTTP_PORT=8080
+      - SERVER_TLS_CERT=
+      - SERVER_TLS_KEY=
+
+      - LOGGER_LEVEL=debug
+
+      - CLICKHOUSE_URI=clickhouse-db:9000
+      - CLICKHOUSE_USER=
+      - CLICKHOUSE_DATABASE=logs
+    ports:
+      - 8080:8080
+    depends_on:
+      - clickhouse-db
