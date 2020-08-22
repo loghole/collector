@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/gadavy/tracing"
+	"github.com/google/uuid"
+	"github.com/loghole/lhw/zap"
 	"github.com/spf13/viper"
 	"github.com/uber/jaeger-client-go/config"
 
 	"github.com/loghole/collector/pkg/clickhouseclient"
-	"github.com/loghole/collector/pkg/log"
 	"github.com/loghole/collector/pkg/server"
 )
 
@@ -20,17 +21,19 @@ const (
 
 // nolint:gochecknoglobals // build args
 var (
-	ServiceName string
-	AppName     string
-	GitHash     string
-	Version     string
-	BuildAt     string
+	InstanceUUID = uuid.New()
+	ServiceName  string
+	AppName      string
+	GitHash      string
+	Version      string
+	BuildAt      string
 )
 
 func Init() {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetConfigType("json")
+	viper.SetConfigFile(defaultServiceName)
 	viper.AddConfigPath("./configs/")
 
 	_ = viper.ReadInConfig()
@@ -57,18 +60,7 @@ func ClickhouseConfig() *clickhouseclient.Config {
 }
 
 func TracerConfig() *config.Configuration {
-	var service string
-
-	switch {
-	case ServiceName != "":
-		service = ServiceName
-	case viper.GetString("service.name") != "":
-		service = viper.GetString("service.name")
-	default:
-		service = defaultServiceName
-	}
-
-	return tracing.DefaultConfiguration(service, viper.GetString("jaeger.uri"))
+	return tracing.DefaultConfiguration(serviceName(), viper.GetString("jaeger.uri"))
 }
 
 func ServerConfig() *server.Config {
@@ -82,11 +74,24 @@ func ServerConfig() *server.Config {
 	}
 }
 
-func LoggerConfig() *log.Config {
-	return &log.Config{
-		Level: viper.GetString("logger.level"),
-		Options: []log.Option{
-			log.AddCaller(),
-		},
+func LoggerConfig() *zap.Config {
+	return &zap.Config{
+		Level:         viper.GetString("logger.level"),
+		CollectorURL:  viper.GetString("logger.collector.url"),
+		Namespace:     viper.GetString("logger.namespace"),
+		Source:        serviceName(),
+		BuildCommit:   GitHash,
+		DisableStdout: false,
+	}
+}
+
+func serviceName() string {
+	switch {
+	case ServiceName != "":
+		return ServiceName
+	case viper.GetString("service.name") != "":
+		return viper.GetString("service.name")
+	default:
+		return defaultServiceName
 	}
 }
