@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/ClickHouse/clickhouse-go v1.4.0
 	github.com/buger/jsonparser v1.0.0
-	github.com/gadavy/tracing v0.5.1
+	github.com/gadavy/tracing v0.9.0
 	github.com/gorilla/mux v1.7.4
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/lissteron/simplerr v0.4.0
