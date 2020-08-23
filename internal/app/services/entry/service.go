@@ -43,7 +43,7 @@ func (s *Service) Ping(ctx context.Context) error {
 
 	if err := s.storage.Ping(ctx); err != nil {
 		s.logger.Errorf(ctx, "ping db failed: %v", err)
-		return simplerr.WrapWithCode(err, codes.DatabaseError, "ping failed")
+		return simplerr.WrapWithCode(err, codes.DatabaseError, "ping db failed")
 	}
 
 	return nil

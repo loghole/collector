@@ -49,10 +49,10 @@ func NewEntryHandlers(
 }
 
 func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request) {
-	span := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).Build()
+	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
 	defer span.Finish()
 
-	resp, ctx := response.NewBaseResponse(), span.Context(r.Context())
+	resp := response.NewBaseResponse()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -71,10 +71,10 @@ func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request) {
-	span := h.tracer.NewSpan().WithName(r.URL.String()).Build()
+	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
 	defer span.Finish()
 
-	resp, ctx := response.NewBaseResponse(), span.Context(r.Context())
+	resp := response.NewBaseResponse()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -93,10 +93,10 @@ func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) PingHandler(w http.ResponseWriter, r *http.Request) {
-	span := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).Build()
+	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
 	defer span.Finish()
 
-	resp, ctx := response.NewBaseResponse(), span.Context(r.Context())
+	resp := response.NewBaseResponse()
 	defer resp.Write(ctx, w, h.logger)
 
 	if err := h.service.Ping(ctx); err != nil {
