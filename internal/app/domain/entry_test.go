@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -22,7 +21,7 @@ func TestEntry_UnmarshalJSON(t *testing.T) {
 			wantErr: false,
 			expectedRes: &Entry{
 				Time:   time.Unix(0, 1595768727429286952),
-				Params: []byte(fmt.Sprintf(`{"time":"%s"}`, time.Unix(0, 1595768727429286952).Format(time.RFC3339Nano))),
+				Params: []byte(`{"time":"2020-07-26T16:05:27.429286952+03:00"}`),
 			},
 		},
 		{

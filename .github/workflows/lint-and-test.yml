@@ -17,6 +17,8 @@ jobs:
   gotest:
     name: test
     runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Moscow
     steps:
       - name: Install Go
         uses: actions/setup-go@v2
