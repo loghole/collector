@@ -97,11 +97,13 @@ func main() {
 
 	errGroup.Go(func() error {
 		logger.Info("start entry writer")
+
 		return repository.Run(ctx)
 	})
 
 	errGroup.Go(func() error {
 		logger.Infof("start http server on: %s", srv.Addr())
+
 		return srv.ListenAndServe()
 	})
 

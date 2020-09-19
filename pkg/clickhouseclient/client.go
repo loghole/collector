@@ -33,6 +33,7 @@ func NewClient(config *Config) (client *Client, err error) {
 		db, err = sqlx.Connect("clickhouse", connString(config))
 		if err != nil {
 			time.Sleep(time.Second)
+
 			continue
 		}
 

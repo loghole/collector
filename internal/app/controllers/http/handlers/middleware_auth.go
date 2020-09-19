@@ -37,6 +37,7 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		if auth == "" {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
 			return
 		}
 
@@ -44,11 +45,13 @@ func (m *AuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		if len(parts) < 2 || !strings.EqualFold(parts[0], "bearer") {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
 			return
 		}
 
 		if _, ok := m.tokens[parts[1]]; !ok {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
 			return
 		}
 

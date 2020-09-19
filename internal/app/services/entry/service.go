@@ -43,6 +43,7 @@ func (s *Service) Ping(ctx context.Context) error {
 
 	if err := s.storage.Ping(ctx); err != nil {
 		s.logger.Errorf(ctx, "ping db failed: %v", err)
+
 		return simplerr.WrapWithCode(err, codes.DatabaseError, "ping db failed")
 	}
 
@@ -55,6 +56,7 @@ func (s *Service) StoreItem(ctx context.Context, remoteIP string, data []byte) (
 	entry, err := s.parseEntryItem(ctx, data)
 	if err != nil {
 		s.logger.Errorf(ctx, "parse entry item failed: %v", err)
+
 		return simplerr.WrapWithCode(err, codes.UnmarshalError, "parse json failed")
 	}
 
@@ -63,6 +65,7 @@ func (s *Service) StoreItem(ctx context.Context, remoteIP string, data []byte) (
 	err = s.storage.StoreEntryList(ctx, []*domain.Entry{entry})
 	if err != nil {
 		s.logger.Errorf(ctx, "store entry list failed: %v", err)
+
 		return simplerr.WrapWithCode(err, codes.DatabaseError, "store failed")
 	}
 
@@ -75,6 +78,7 @@ func (s *Service) StoreList(ctx context.Context, remoteIP string, data []byte) (
 	list, err := s.parseEntryList(ctx, data)
 	if err != nil {
 		s.logger.Errorf(ctx, "parse entry list failed: %v", err)
+
 		return simplerr.WrapWithCode(err, codes.UnmarshalError, "parse json failed")
 	}
 
@@ -83,6 +87,7 @@ func (s *Service) StoreList(ctx context.Context, remoteIP string, data []byte) (
 	err = s.storage.StoreEntryList(ctx, list)
 	if err != nil {
 		s.logger.Errorf(ctx, "store entry list failed: %v", err)
+
 		return simplerr.WrapWithCode(err, codes.DatabaseError, "store failed")
 	}
 
