@@ -169,7 +169,7 @@ func (r *EntryRepository) insertEntry(stmt *sql.Stmt, entry *domain.Entry) (err 
 	_, err = stmt.Exec(entry.Time, entry.Time, entry.Time.UnixNano(), entry.Namespace, entry.Source,
 		entry.Host, entry.Level, entry.TraceID, entry.Message, string(entry.Params), entry.StringKey,
 		entry.StringVal, entry.FloatKey, entry.FloatVal, entry.BuildCommit, entry.ConfigHash, entry.RemoteIP,
-		r.rand.Uint64()) //nolint:gosec // need pseudo random
+		r.rand.Uint64())
 
 	return err
 }
