@@ -6,8 +6,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gadavy/tracing"
 	"github.com/jmoiron/sqlx"
+	"github.com/loghole/tracing"
+	"github.com/loghole/tracing/tracelog"
 
 	"github.com/loghole/collector/internal/app/domain"
 )
@@ -35,20 +36,9 @@ const (
 		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 )
 
-type Logger interface {
-	Debug(ctx context.Context, args ...interface{})
-	Debugf(ctx context.Context, template string, args ...interface{})
-	Info(ctx context.Context, args ...interface{})
-	Infof(ctx context.Context, template string, args ...interface{})
-	Warn(ctx context.Context, args ...interface{})
-	Warnf(ctx context.Context, template string, args ...interface{})
-	Error(ctx context.Context, args ...interface{})
-	Errorf(ctx context.Context, template string, args ...interface{})
-}
-
 type EntryRepository struct {
 	db     *sqlx.DB
-	logger Logger
+	logger tracelog.Logger
 
 	period time.Duration
 	queue  chan *domain.Entry
@@ -58,7 +48,7 @@ type EntryRepository struct {
 
 func NewEntryRepository(
 	db *sqlx.DB,
-	logger Logger,
+	logger tracelog.Logger,
 	capacity int,
 	period time.Duration,
 ) *EntryRepository {

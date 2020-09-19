@@ -1,7 +1,7 @@
 version: '3'
 services:
   clickhouse-db:
-    image: loghole/clickhouse-db:v0.4.0
+    image: loghole/clickhouse-db:latest
     volumes:
       - './data/clickhouse:/var/lib/clickhouse'
     ports:

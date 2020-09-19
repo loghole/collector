@@ -7,8 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/gadavy/tracing"
 	"github.com/loghole/lhw/zap"
+	"github.com/loghole/tracing"
+	"github.com/loghole/tracing/tracehttp"
+	"github.com/loghole/tracing/tracelog"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
@@ -51,7 +53,7 @@ func main() {
 		logger.Fatalf("init tracing client failed: %v", err)
 	}
 
-	traceLogger := tracing.DefaultTraceLogger(logger.SugaredLogger)
+	traceLogger := tracelog.NewTraceLogger(logger.SugaredLogger)
 
 	// Init clients
 	clickhouseDB, err := clickhouseclient.NewClient(config.ClickhouseConfig())
@@ -88,7 +90,7 @@ func main() {
 	r.HandleFunc("/api/v1/info", infoHandlers.InfoHandler)
 
 	r1 := r.PathPrefix("/api/v1").Subrouter()
-	r1.Use(authMiddleware.Middleware, remoteIPMiddleware.Middleware)
+	r1.Use(authMiddleware.Middleware, remoteIPMiddleware.Middleware, tracehttp.NewMiddleware(tracer).Middleware)
 	r1.HandleFunc("/store", entryHandlers.StoreItemHandler)
 	r1.HandleFunc("/store/list", entryHandlers.StoreListHandler)
 	r1.HandleFunc("/ping", entryHandlers.PingHandler)

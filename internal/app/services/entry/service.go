@@ -3,23 +3,13 @@ package entry
 import (
 	"context"
 
-	"github.com/gadavy/tracing"
 	"github.com/lissteron/simplerr"
+	"github.com/loghole/tracing"
+	"github.com/loghole/tracing/tracelog"
 
 	"github.com/loghole/collector/internal/app/codes"
 	"github.com/loghole/collector/internal/app/domain"
 )
-
-type Logger interface {
-	Debug(ctx context.Context, args ...interface{})
-	Debugf(ctx context.Context, template string, args ...interface{})
-	Info(ctx context.Context, args ...interface{})
-	Infof(ctx context.Context, template string, args ...interface{})
-	Warn(ctx context.Context, args ...interface{})
-	Warnf(ctx context.Context, template string, args ...interface{})
-	Error(ctx context.Context, args ...interface{})
-	Errorf(ctx context.Context, template string, args ...interface{})
-}
 
 type Storage interface {
 	Ping(ctx context.Context) error
@@ -28,10 +18,10 @@ type Storage interface {
 
 type Service struct {
 	storage Storage
-	logger  Logger
+	logger  tracelog.Logger
 }
 
-func NewService(storage Storage, logger Logger) *Service {
+func NewService(storage Storage, logger tracelog.Logger) *Service {
 	return &Service{
 		storage: storage,
 		logger:  logger,

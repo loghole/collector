@@ -3,6 +3,8 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/loghole/tracing/tracelog"
+
 	"github.com/loghole/collector/config"
 	"github.com/loghole/collector/internal/app/controllers/http/response"
 )
@@ -16,11 +18,11 @@ type info struct {
 }
 
 type InfoHandlers struct {
-	logger Logger
+	logger tracelog.Logger
 	info   info
 }
 
-func NewInfoHandlers(logger Logger) *InfoHandlers {
+func NewInfoHandlers(logger tracelog.Logger) *InfoHandlers {
 	return &InfoHandlers{
 		logger: logger,
 		info: info{

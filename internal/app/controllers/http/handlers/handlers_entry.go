@@ -6,23 +6,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/gadavy/tracing"
 	"github.com/lissteron/simplerr"
+	"github.com/loghole/tracing"
+	"github.com/loghole/tracing/tracelog"
 
 	"github.com/loghole/collector/internal/app/codes"
 	"github.com/loghole/collector/internal/app/controllers/http/response"
 )
-
-type Logger interface {
-	Debug(ctx context.Context, args ...interface{})
-	Debugf(ctx context.Context, template string, args ...interface{})
-	Info(ctx context.Context, args ...interface{})
-	Infof(ctx context.Context, template string, args ...interface{})
-	Warn(ctx context.Context, args ...interface{})
-	Warnf(ctx context.Context, template string, args ...interface{})
-	Error(ctx context.Context, args ...interface{})
-	Errorf(ctx context.Context, template string, args ...interface{})
-}
 
 type EntryService interface {
 	Ping(ctx context.Context) error
@@ -32,13 +22,13 @@ type EntryService interface {
 
 type EntryHandlers struct {
 	service EntryService
-	logger  Logger
+	logger  tracelog.Logger
 	tracer  *tracing.Tracer
 }
 
 func NewEntryHandlers(
 	service EntryService,
-	logger Logger,
+	logger tracelog.Logger,
 	tracer *tracing.Tracer,
 ) *EntryHandlers {
 	return &EntryHandlers{
@@ -49,10 +39,7 @@ func NewEntryHandlers(
 }
 
 func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request) {
-	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
-	defer span.Finish()
-
-	resp := response.NewBaseResponse()
+	resp, ctx := response.NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -71,10 +58,7 @@ func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request) {
-	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
-	defer span.Finish()
-
-	resp := response.NewBaseResponse()
+	resp, ctx := response.NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -93,10 +77,7 @@ func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) PingHandler(w http.ResponseWriter, r *http.Request) {
-	span, ctx := h.tracer.NewSpan().WithName(r.URL.String()).ExtractHeaders(r.Header).BuildWithContext(r.Context())
-	defer span.Finish()
-
-	resp := response.NewBaseResponse()
+	resp, ctx := response.NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	if err := h.service.Ping(ctx); err != nil {
