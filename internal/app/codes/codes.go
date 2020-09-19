@@ -5,17 +5,17 @@ import (
 )
 
 const (
-	systemCodes   = 1000
-	usecasesCodes = 2000
+	system   = 1000
+	internal = 2000
 )
 
 const (
-	DatabaseError = systemCodes + iota
+	DatabaseError = system + iota
 	SystemError
 )
 
 const (
-	UnmarshalError = usecasesCodes + iota
+	UnmarshalError = internal + iota
 )
 
 func ToHTTP(code int) int {

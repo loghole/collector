@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gadavy/tracing"
 	"github.com/google/uuid"
 	"github.com/loghole/lhw/zap"
+	"github.com/loghole/tracing"
 	"github.com/spf13/viper"
 	"github.com/uber/jaeger-client-go/config"
 
