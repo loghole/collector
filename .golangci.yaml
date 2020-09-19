@@ -6,7 +6,7 @@ linters:
   enable-all: true
   disable:
    - godot
-   - nolintlint
+   - gci
 linters-settings:
   gocritic:
     enabled-tags:

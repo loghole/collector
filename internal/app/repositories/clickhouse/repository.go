@@ -3,6 +3,7 @@ package clickhouse
 import (
 	"context"
 	"database/sql"
+	"math/rand"
 	"time"
 
 	"github.com/gadavy/tracing"
@@ -29,8 +30,9 @@ const (
              params_float.values, 
              build_commit, 
              config_hash,
-             remote_ip) 
-		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+						 remote_ip,
+						 row_id) 
+		VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
 )
 
 type Logger interface {
@@ -50,6 +52,8 @@ type EntryRepository struct {
 
 	period time.Duration
 	queue  chan *domain.Entry
+
+	rand rand.Source64
 }
 
 func NewEntryRepository(
@@ -63,6 +67,7 @@ func NewEntryRepository(
 		logger: logger,
 		period: period,
 		queue:  make(chan *domain.Entry, capacity),
+		rand:   rand.Source64(rand.New(rand.NewSource(time.Now().UnixNano()))), //nolint:gosec // need pseudo random
 	}
 }
 
@@ -122,6 +127,7 @@ func (r *EntryRepository) storeEntryChan(ctx context.Context) error {
 				tx, stmt, err = r.getInsertEntryStmt()
 				if err != nil {
 					r.logger.Error(ctx, err)
+
 					continue
 				}
 
@@ -134,6 +140,7 @@ func (r *EntryRepository) storeEntryChan(ctx context.Context) error {
 
 			if err := r.insertEntry(stmt, entry); err != nil {
 				r.logger.Error(ctx, err)
+
 				continue
 			}
 
@@ -161,7 +168,8 @@ func (r *EntryRepository) getInsertEntryStmt() (tx *sql.Tx, stmt *sql.Stmt, err 
 func (r *EntryRepository) insertEntry(stmt *sql.Stmt, entry *domain.Entry) (err error) {
 	_, err = stmt.Exec(entry.Time, entry.Time, entry.Time.UnixNano(), entry.Namespace, entry.Source,
 		entry.Host, entry.Level, entry.TraceID, entry.Message, string(entry.Params), entry.StringKey,
-		entry.StringVal, entry.FloatKey, entry.FloatVal, entry.BuildCommit, entry.ConfigHash, entry.RemoteIP)
+		entry.StringVal, entry.FloatKey, entry.FloatVal, entry.BuildCommit, entry.ConfigHash, entry.RemoteIP,
+		r.rand.Uint64())
 
 	return err
 }
