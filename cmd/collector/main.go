@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/loghole/database"
+	"github.com/loghole/database/hooks"
 	"github.com/loghole/lhw/zap"
 	"github.com/loghole/tracing"
 	"github.com/loghole/tracing/tracehttp"
@@ -18,7 +21,6 @@ import (
 	"github.com/loghole/collector/internal/app/controllers/http/handlers"
 	"github.com/loghole/collector/internal/app/repositories/clickhouse"
 	"github.com/loghole/collector/internal/app/services/entry"
-	"github.com/loghole/collector/pkg/clickhouseclient"
 	"github.com/loghole/collector/pkg/server"
 )
 
@@ -56,14 +58,14 @@ func main() {
 	traceLogger := tracelog.NewTraceLogger(logger.SugaredLogger)
 
 	// Init clients
-	clickhouseDB, err := clickhouseclient.NewClient(config.ClickhouseConfig())
+	clickhouseDB, err := database.New(config.ClickhouseConfig(), clockhouseRetryFunc())
 	if err != nil {
-		logger.Fatalf("init clickhouse db client failed: %v", err)
+		logger.Fatalf("can't connect to clickhouse db: %v", err)
 	}
 
 	// Init repository
 	repository := clickhouse.NewEntryRepository(
-		clickhouseDB.Client(),
+		clickhouseDB,
 		traceLogger,
 		viper.GetInt("service.writer.capacity"),
 		viper.GetDuration("service.writer.period"),
@@ -135,4 +137,10 @@ func main() {
 	}
 
 	logger.Info("application stopped")
+}
+
+func clockhouseRetryFunc() database.Option {
+	return database.WithRetryFunc(func(err error) bool {
+		return errors.Is(err, hooks.ErrCanRetry)
+	})
 }

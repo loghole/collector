@@ -70,6 +70,7 @@ func (e *Entry) SetRemoteIP(remoteIP string) {
 	e.RemoteIP = remoteIP
 }
 
+// nolint:cyclop // fix it late
 func (e *Entry) parseRootObject(key, value []byte, dataType jsonparser.ValueType, offset int) (err error) {
 	switch string(key) {
 	case "time":
@@ -131,7 +132,9 @@ func (e *Entry) parseArray(key, value []byte) (err error) {
 }
 
 func (e *Entry) appendFloat(key, value []byte) error {
-	f, err := strconv.ParseFloat(string(value), 64)
+	const base = 64
+
+	f, err := strconv.ParseFloat(string(value), base)
 	if err != nil {
 		return err
 	}

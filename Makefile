@@ -9,13 +9,13 @@ GIT_HASH := $$(git rev-parse HEAD)
 
 GO_TEST_PACKAGES = $(shell go list ./... | egrep -v '(pkg|cmd)')
 
-gomod:
+mod:
 	go mod download
 
-gotest:
+test:
 	go test -race -v -cover -coverprofile coverage.out $(GO_TEST_PACKAGES)
 
-golint:
+lint:
 	golangci-lint run -v
 
 docker-image:

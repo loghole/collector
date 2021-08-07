@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"github.com/lissteron/simplerr"
-
-	"github.com/loghole/collector/internal/app/codes"
 )
 
 type Logger interface {
@@ -45,10 +43,10 @@ func (r *BaseResponse) Write(ctx context.Context, w http.ResponseWriter, log Log
 func (r *BaseResponse) ParseError(err error) {
 	code := simplerr.GetCode(err)
 
-	r.Status = codes.ToHTTP(code)
+	r.Status = code.HTTP()
 
 	r.Errors = append(r.Errors, RespError{
-		Code:   strconv.Itoa(code),
+		Code:   strconv.Itoa(code.Int()),
 		Detail: simplerr.GetText(err),
 	})
 }

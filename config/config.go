@@ -5,18 +5,27 @@ import (
 	"strings"
 	"time"
 
+	// init clickhouse driver.
+	_ "github.com/ClickHouse/clickhouse-go"
 	"github.com/google/uuid"
+	"github.com/loghole/database"
 	"github.com/loghole/lhw/zap"
 	"github.com/loghole/tracing"
 	"github.com/spf13/viper"
 	"github.com/uber/jaeger-client-go/config"
 
-	"github.com/loghole/collector/pkg/clickhouseclient"
 	"github.com/loghole/collector/pkg/server"
 )
 
 const (
-	defaultServiceName = "collector"
+	_defaultServiceName = "collector"
+
+	_defaultServerIdleTimeout = time.Minute * 10
+
+	_defaultClickhouseReadTimeoutSeconds  = 10
+	_defaultClickhouseWriteTimeoutSeconds = 20
+
+	_defaultServerWriterCapacity = 1000
 )
 
 // nolint:gochecknoglobals // build args
@@ -33,29 +42,29 @@ func Init() {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.SetConfigType("json")
-	viper.SetConfigName(defaultServiceName)
+	viper.SetConfigName(_defaultServiceName)
 	viper.AddConfigPath("./configs/")
 
 	_ = viper.ReadInConfig()
 
 	viper.SetDefault("server.read.timeout", time.Minute)
 	viper.SetDefault("server.write.timeout", time.Minute)
-	viper.SetDefault("server.idle.timeout", time.Minute*10) // nolint:gomnd,gocritic
+	viper.SetDefault("server.idle.timeout", _defaultServerIdleTimeout)
 
-	viper.SetDefault("clickhouse.read.timeout", 10)
-	viper.SetDefault("clickhouse.write.timeout", 20)
-	viper.SetDefault("service.writer.capacity", 1000)
+	viper.SetDefault("clickhouse.read.timeout", _defaultClickhouseReadTimeoutSeconds)
+	viper.SetDefault("clickhouse.write.timeout", _defaultClickhouseWriteTimeoutSeconds)
+	viper.SetDefault("service.writer.capacity", _defaultServerWriterCapacity)
 	viper.SetDefault("service.writer.period", time.Second)
 }
 
-func ClickhouseConfig() *clickhouseclient.Config {
-	return &clickhouseclient.Config{
+func ClickhouseConfig() *database.Config {
+	return &database.Config{
 		Addr:         viper.GetString("clickhouse.uri"),
 		User:         viper.GetString("clickhouse.user"),
-		Password:     viper.GetString("clickhouse.password"),
 		Database:     viper.GetString("clickhouse.database"),
-		ReadTimeout:  viper.GetInt("clickhouse.read.timeout"),
-		WriteTimeout: viper.GetInt("clickhouse.write.timeout"),
+		ReadTimeout:  viper.GetString("clickhouse.read.timeout"),
+		WriteTimeout: viper.GetString("clickhouse.write.timeout"),
+		Type:         database.ClickhouseDatabase,
 	}
 }
 
@@ -92,6 +101,6 @@ func serviceName() string {
 	case viper.GetString("service.name") != "":
 		return viper.GetString("service.name")
 	default:
-		return defaultServiceName
+		return _defaultServiceName
 	}
 }

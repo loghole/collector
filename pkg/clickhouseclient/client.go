@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	_ "github.com/ClickHouse/clickhouse-go" // nolint:gci // driver
 	"github.com/jmoiron/sqlx"
-
-	_ "github.com/ClickHouse/clickhouse-go" // driver
 )
 
 const (
