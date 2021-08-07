@@ -89,7 +89,7 @@ func (h *EntryHandlers) PingHandler(w http.ResponseWriter, r *http.Request) {
 func readData(r io.Reader) ([]byte, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
-		return nil, simplerr.WrapWithCode(err, codes.SystemError, "system error")
+		return nil, simplerr.WrapWithCode(err, simplerr.InternalCode(codes.SystemError), "system error")
 	}
 
 	return data, nil

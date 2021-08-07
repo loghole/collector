@@ -34,7 +34,7 @@ func (s *Service) Ping(ctx context.Context) error {
 	if err := s.storage.Ping(ctx); err != nil {
 		s.logger.Errorf(ctx, "ping db failed: %v", err)
 
-		return simplerr.WrapWithCode(err, codes.DatabaseError, "ping db failed")
+		return simplerr.WrapWithCode(err, simplerr.InternalCode(codes.DatabaseError), "ping db failed")
 	}
 
 	return nil
@@ -47,7 +47,7 @@ func (s *Service) StoreItem(ctx context.Context, remoteIP string, data []byte) (
 	if err != nil {
 		s.logger.Errorf(ctx, "parse entry item failed: %v", err)
 
-		return simplerr.WrapWithCode(err, codes.UnmarshalError, "parse json failed")
+		return simplerr.WrapWithCode(err, simplerr.InternalCode(codes.UnmarshalError), "parse json failed")
 	}
 
 	entry.SetRemoteIP(remoteIP)
@@ -56,7 +56,7 @@ func (s *Service) StoreItem(ctx context.Context, remoteIP string, data []byte) (
 	if err != nil {
 		s.logger.Errorf(ctx, "store entry list failed: %v", err)
 
-		return simplerr.WrapWithCode(err, codes.DatabaseError, "store failed")
+		return simplerr.WrapWithCode(err, simplerr.InternalCode(codes.DatabaseError), "store failed")
 	}
 
 	return nil
@@ -69,7 +69,7 @@ func (s *Service) StoreList(ctx context.Context, remoteIP string, data []byte) (
 	if err != nil {
 		s.logger.Errorf(ctx, "parse entry list failed: %v", err)
 
-		return simplerr.WrapWithCode(err, codes.UnmarshalError, "parse json failed")
+		return simplerr.WrapWithCode(err, simplerr.InternalCode(codes.UnmarshalError), "parse json failed")
 	}
 
 	list.SetRemoteIP(remoteIP)
@@ -78,7 +78,7 @@ func (s *Service) StoreList(ctx context.Context, remoteIP string, data []byte) (
 	if err != nil {
 		s.logger.Errorf(ctx, "store entry list failed: %v", err)
 
-		return simplerr.WrapWithCode(err, codes.DatabaseError, "store failed")
+		return simplerr.WrapWithCode(err, simplerr.InternalCode(codes.DatabaseError), "store failed")
 	}
 
 	return nil

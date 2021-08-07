@@ -1,12 +1,14 @@
+# More info on config here: https://golangci-lint.run/usage/configuration/#config-file
 run:
+  timeout: 5m
   tests: false
-  skip-dirs:
-  - scripts
 linters:
   enable-all: true
   disable:
-   - godot
-   - gci
+    - exhaustivestruct
+    - tagliatelle
+    - wrapcheck
+  fast: false
 linters-settings:
   gocritic:
     enabled-tags:
@@ -15,3 +17,21 @@ linters-settings:
       - performance
       - diagnostic
       - opinionated
+
+  govet:
+    enable-all: true
+    disable:
+      - shadow
+      - fieldalignment
+
+  gci:
+    local-prefixes: github.com/loghole/collector
+
+  wrapcheck:
+    ignoreSigs:
+      - .Errorf(
+      - errors.New(
+      - .Wrapf(
+      - .Wrap(
+      - .WithCode(
+      - .ValidateStruct(
