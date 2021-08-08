@@ -24,6 +24,8 @@ import (
 	"github.com/loghole/collector/pkg/server"
 )
 
+const _defaultRetryTry = 10
+
 // nolint: funlen,gocritic
 func main() {
 	// Init config, logger, exit chan
@@ -58,7 +60,11 @@ func main() {
 	traceLogger := tracelog.NewTraceLogger(logger.SugaredLogger)
 
 	// Init clients
-	clickhouseDB, err := database.New(config.ClickhouseConfig(), clockhouseRetryFunc())
+	clickhouseDB, err := database.New(
+		config.ClickhouseConfig(),
+		database.WithReconnectHook(),
+		clockhouseRetryFunc(),
+	)
 	if err != nil {
 		logger.Fatalf("can't connect to clickhouse db: %v", err)
 	}
@@ -140,7 +146,11 @@ func main() {
 }
 
 func clockhouseRetryFunc() database.Option {
-	return database.WithRetryFunc(func(err error) bool {
+	return database.WithRetryFunc(func(retryCount int, err error) bool {
+		if retryCount > _defaultRetryTry {
+			return false
+		}
+
 		return errors.Is(err, hooks.ErrCanRetry)
 	})
 }
