@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/loghole/database"
-	"github.com/loghole/database/hooks"
 	"github.com/loghole/lhw/zap"
 	"github.com/loghole/tracing"
 	"github.com/loghole/tracing/tracehttp"
@@ -63,7 +62,7 @@ func main() {
 	clickhouseDB, err := database.New(
 		config.ClickhouseConfig(),
 		database.WithReconnectHook(),
-		clockhouseRetryFunc(),
+		clockhouseRetryFunc(logger),
 	)
 	if err != nil {
 		logger.Fatalf("can't connect to clickhouse db: %v", err)
@@ -145,12 +144,16 @@ func main() {
 	logger.Info("application stopped")
 }
 
-func clockhouseRetryFunc() database.Option {
+func clockhouseRetryFunc(logger *zap.Logger) database.Option {
 	return database.WithRetryFunc(func(retryCount int, err error) bool {
+		logger.Infof("retry count: %d", retryCount)
+
 		if retryCount > _defaultRetryTry {
 			return false
 		}
 
-		return errors.Is(err, hooks.ErrCanRetry)
+		return strings.Contains(err.Error(), "broken pipe") ||
+			strings.Contains(err.Error(), "bad connection") ||
+			strings.Contains(err.Error(), "connection timed out")
 	})
 }
