@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lissteron/simplerr v0.9.0
-	github.com/loghole/database v0.4.0
+	github.com/loghole/database v0.4.1
 	github.com/loghole/gorand v1.0.1
 	github.com/loghole/lhw v0.5.0
 	github.com/loghole/tracing v0.14.3
