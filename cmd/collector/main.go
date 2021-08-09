@@ -146,6 +146,10 @@ func main() {
 
 func clockhouseRetryFunc(logger *zap.Logger) database.Option {
 	return database.WithRetryFunc(func(retryCount int, err error) bool {
+		if err == nil {
+			return false
+		}
+
 		logger.Infof("retry count: %d", retryCount)
 
 		if retryCount > _defaultRetryTry {
