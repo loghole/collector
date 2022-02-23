@@ -1,5 +1,19 @@
 # Collector
 
+## Use docker-compose logging driver.
+
+```yaml
+services:
+  vuewer:
+    image: service:latest
+    logging:
+      driver: "splunk"
+      options:
+        splunk-token: "SECRET_TOKEN"
+        splunk-url: "https://collector-host.com:8080"
+        splunk-format: "json"
+```
+
 ## Configuration
 
 #### ENV:
@@ -66,7 +80,10 @@ SERVICE_AUTH_TOKENS=secret_token_1 secret_token_2
     },
     "auth": {
       "enable": true,
-      "tokens": ["secret_token_1", "secret_token_2"]
+      "tokens": [
+        "secret_token_1",
+        "secret_token_2"
+      ]
     }
   }
 }

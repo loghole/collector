@@ -10,6 +10,7 @@ import (
 
 	"github.com/loghole/database"
 	"github.com/loghole/lhw/zap"
+	"github.com/loghole/lhw/zaplog"
 	"github.com/loghole/tracing"
 	"github.com/loghole/tracing/tracehttp"
 	"github.com/loghole/tracing/tracelog"
@@ -17,7 +18,9 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/loghole/collector/config"
-	"github.com/loghole/collector/internal/app/controllers/http/handlers"
+	entryV1 "github.com/loghole/collector/internal/app/api/entry/v1"
+	"github.com/loghole/collector/internal/app/api/middleware"
+	splunkV1 "github.com/loghole/collector/internal/app/api/splunk/v1"
 	"github.com/loghole/collector/internal/app/repositories/clickhouse"
 	"github.com/loghole/collector/internal/app/services/entry"
 	"github.com/loghole/collector/pkg/server"
@@ -30,7 +33,7 @@ func main() {
 	// Init config, logger, exit chan
 	config.Init()
 
-	logger, err := zap.NewLogger(config.LoggerConfig(), zap.AddCaller())
+	logger, err := zaplog.NewLogger(config.LoggerConfig(), zaplog.AddCaller())
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stdout, "init logger failed: %v", err)
 		os.Exit(1)
@@ -81,11 +84,12 @@ func main() {
 
 	// Init handlers
 	var (
-		entryHandlers = handlers.NewEntryHandlers(entryService, traceLogger, tracer)
-		infoHandlers  = handlers.NewInfoHandlers(traceLogger)
+		entryHandlers = entryV1.NewEntryHandlers(entryService, traceLogger, tracer)
+		splunkHandler = splunkV1.NewSplunkHandler(entryService, traceLogger, tracer)
+		infoHandlers  = entryV1.NewInfoHandlers(traceLogger)
 
-		remoteIPMiddleware = handlers.NewRemoteIPMiddleware("service.ip.header")
-		authMiddleware     = handlers.NewAuthMiddleware(
+		remoteIPMiddleware = middleware.NewRemoteIPMiddleware("service.ip.header")
+		authMiddleware     = middleware.NewAuthMiddleware(
 			viper.GetBool("service.auth.enable"),
 			viper.GetStringSlice("service.auth.tokens"),
 		)
@@ -101,6 +105,10 @@ func main() {
 	r1.HandleFunc("/store", entryHandlers.StoreItemHandler)
 	r1.HandleFunc("/store/list", entryHandlers.StoreListHandler)
 	r1.HandleFunc("/ping", entryHandlers.PingHandler)
+
+	r2 := r.PathPrefix("/services/collector/event").Subrouter()
+	r2.Use(authMiddleware.Middleware, remoteIPMiddleware.Middleware, tracehttp.NewMiddleware(tracer).Middleware)
+	r2.HandleFunc("/1.0", splunkHandler.Handler)
 
 	errGroup, ctx := errgroup.WithContext(context.Background())
 

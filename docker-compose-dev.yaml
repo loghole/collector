@@ -8,15 +8,15 @@ services:
       - 127.0.0.1:8123:8123
       - 127.0.0.1:9500:9000
       - 127.0.0.1:9009:9009
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.19
-    ports:
-      - "6831:6831/udp"
-      - "16686:16686"
+#
+#  jaeger:
+#    image: jaegertracing/all-in-one:1.19
+#    ports:
+#      - "6831:6831/udp"
+#      - "16686:16686"
 
   collector:
-    image: golang:1.15-alpine
+    image: golang:1.17-alpine
     volumes:
       - ./:/app
     working_dir: /app/cmd/collector/
@@ -26,8 +26,8 @@ services:
       - SERVER_CERT=
       - SERVER_KEY=
 
-      - ENABLE_AUTH=true
-      - TOKEN_LIST=secret_token_1 secret_token_2
+      - SERVICE_AUTH_ENABLE=true
+      - SERVICE_AUTH_TOKENS=secret_token_1 secret_token_2
 
       - LOGGER_LEVEL=debug
 
@@ -40,4 +40,4 @@ services:
       - 50000:8080
     depends_on:
       - clickhouse-db
-      - jaeger
+#      - jaeger

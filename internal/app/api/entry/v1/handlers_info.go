@@ -1,4 +1,4 @@
-package handlers
+package v1
 
 import (
 	"net/http"
@@ -6,7 +6,6 @@ import (
 	"github.com/loghole/tracing/tracelog"
 
 	"github.com/loghole/collector/config"
-	"github.com/loghole/collector/internal/app/controllers/http/response"
 )
 
 type info struct {
@@ -36,7 +35,7 @@ func NewInfoHandlers(logger tracelog.Logger) *InfoHandlers {
 }
 
 func (h *InfoHandlers) InfoHandler(w http.ResponseWriter, r *http.Request) {
-	resp, ctx := response.NewBaseResponse(), r.Context()
+	resp, ctx := NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	resp.SetData(h.info)

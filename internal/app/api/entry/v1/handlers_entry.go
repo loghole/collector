@@ -1,9 +1,8 @@
-package handlers
+package v1
 
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/lissteron/simplerr"
@@ -11,7 +10,6 @@ import (
 	"github.com/loghole/tracing/tracelog"
 
 	"github.com/loghole/collector/internal/app/codes"
-	"github.com/loghole/collector/internal/app/controllers/http/response"
 )
 
 type EntryService interface {
@@ -39,7 +37,7 @@ func NewEntryHandlers(
 }
 
 func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request) {
-	resp, ctx := response.NewBaseResponse(), r.Context()
+	resp, ctx := NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -58,7 +56,7 @@ func (h *EntryHandlers) StoreItemHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request) {
-	resp, ctx := response.NewBaseResponse(), r.Context()
+	resp, ctx := NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	data, err := readData(r.Body)
@@ -77,7 +75,7 @@ func (h *EntryHandlers) StoreListHandler(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *EntryHandlers) PingHandler(w http.ResponseWriter, r *http.Request) {
-	resp, ctx := response.NewBaseResponse(), r.Context()
+	resp, ctx := NewBaseResponse(), r.Context()
 	defer resp.Write(ctx, w, h.logger)
 
 	if err := h.service.Ping(ctx); err != nil {
@@ -87,7 +85,7 @@ func (h *EntryHandlers) PingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func readData(r io.Reader) ([]byte, error) {
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, simplerr.WrapWithCode(err, simplerr.InternalCode(codes.SystemError), "system error")
 	}
